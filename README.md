@@ -38,17 +38,17 @@ struct NetworkSource: LogSourceRepresentable {
 
 let source = NetworkSource(module: "Auth")
 
-try logger.log(
+logger.log(
     "Network request finished",
     source: source,
     metadata: ["status": "200"]
 )
 
-try logger.d("request start", source: source)
-try logger.i("request success", source: source)
-try logger.w("retry once", source: source)
-try logger.e("request failed", source: source)
-try logger.c("fatal", source: source)
+logger.d("request start", source: source)
+logger.i("request success", source: source)
+logger.w("retry once", source: source)
+logger.e("request failed", source: source)
+logger.c("fatal", source: source)
 
 let todayEntries = try logger.readEntries(for: Date())
 print(todayEntries.count)

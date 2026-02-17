@@ -39,7 +39,7 @@ final class LogKitTests: XCTestCase {
         let (manager, _) = try makeLogManager()
         let date = makeDate(year: 2026, month: 2, day: 10)
 
-        try manager.log(
+        manager.log(
             "app started",
             level: .info,
             source: "AppLifecycle",
@@ -59,8 +59,8 @@ final class LogKitTests: XCTestCase {
         let day1 = makeDate(year: 2026, month: 2, day: 11)
         let day2 = makeDate(year: 2026, month: 2, day: 12)
 
-        try manager.log("d1", level: .debug, source: "UnitTest", timestamp: day1)
-        try manager.log("d2", level: .debug, source: "UnitTest", timestamp: day2)
+        manager.log("d1", level: .debug, source: "UnitTest", timestamp: day1)
+        manager.log("d2", level: .debug, source: "UnitTest", timestamp: day2)
 
         let files = try manager.existingLogFiles()
         XCTAssertEqual(files.count, 2)
@@ -79,8 +79,8 @@ final class LogKitTests: XCTestCase {
         let manager = LogManager(storageDirectory: baseURL, minimumLevel: .warning)
         let date = makeDate(year: 2026, month: 2, day: 13)
 
-        try manager.log("ignore", level: .info, source: "UnitTest", timestamp: date)
-        try manager.log("store", level: .error, source: "UnitTest", timestamp: date)
+        manager.log("ignore", level: .info, source: "UnitTest", timestamp: date)
+        manager.log("store", level: .error, source: "UnitTest", timestamp: date)
 
         let entries = try manager.readEntries(for: date)
         XCTAssertEqual(entries.count, 1)
@@ -92,8 +92,8 @@ final class LogKitTests: XCTestCase {
         let day1 = makeDate(year: 2026, month: 2, day: 14)
         let day2 = makeDate(year: 2026, month: 2, day: 15)
 
-        try manager.log("a", level: .info, source: "UnitTest", timestamp: day1)
-        try manager.log("b", level: .info, source: "UnitTest", timestamp: day2)
+        manager.log("a", level: .info, source: "UnitTest", timestamp: day1)
+        manager.log("b", level: .info, source: "UnitTest", timestamp: day2)
 
         let exportDir = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -128,11 +128,11 @@ final class LogKitTests: XCTestCase {
 
         let date = makeDate(year: 2026, month: 2, day: 16)
 
-        try manager.log("hidden", level: .info, source: "UnitTest", timestamp: date)
+        manager.log("hidden", level: .info, source: "UnitTest", timestamp: date)
         XCTAssertTrue(recorder.lines.isEmpty)
 
         manager.isConsoleOutputEnabled = true
-        try manager.log("visible", level: .warning, source: "UnitTest", metadata: ["k": "v"], timestamp: date)
+        manager.log("visible", level: .warning, source: "UnitTest", metadata: ["k": "v"], timestamp: date)
 
         XCTAssertEqual(recorder.lines.count, 1)
         XCTAssertTrue(recorder.lines[0].contains("visible"))
@@ -154,7 +154,7 @@ final class LogKitTests: XCTestCase {
         let (manager, _) = try makeLogManager()
         let date = makeDate(year: 2026, month: 2, day: 17)
 
-        try manager.log("default-info", source: "UnitTest", timestamp: date)
+        manager.log("default-info", source: "UnitTest", timestamp: date)
 
         let entries = try manager.readEntries(for: date)
         XCTAssertEqual(entries.count, 1)
@@ -166,11 +166,11 @@ final class LogKitTests: XCTestCase {
         let date = makeDate(year: 2026, month: 2, day: 18)
         let source = FeatureSource(feature: "Login")
 
-        try manager.d("debug", source: source, timestamp: date)
-        try manager.i("info", source: source, timestamp: date)
-        try manager.w("warn", source: source, timestamp: date)
-        try manager.e("error", source: source, timestamp: date)
-        try manager.c("critical", source: source, timestamp: date)
+        manager.d("debug", source: source, timestamp: date)
+        manager.i("info", source: source, timestamp: date)
+        manager.w("warn", source: source, timestamp: date)
+        manager.e("error", source: source, timestamp: date)
+        manager.c("critical", source: source, timestamp: date)
 
         let entries = try manager.readEntries(for: date)
         XCTAssertEqual(entries.map(\.level), [.debug, .info, .warning, .error, .critical])

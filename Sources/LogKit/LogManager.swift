@@ -128,8 +128,8 @@ public final class LogManager: @unchecked Sendable {
         source: some LogSourceRepresentable,
         metadata: [String: String] = [:],
         timestamp: Date = Date()
-    ) throws {
-        try queue.sync {
+    ) {
+        queue.sync {
             guard level >= _minimumLevel else {
                 return
             }
@@ -142,21 +142,25 @@ public final class LogManager: @unchecked Sendable {
                 metadata: metadata
             )
 
-            let fileURL = logFileURL(for: timestamp)
-            let data = try encoder.encode(entry)
-            let lineData = data + Data([0x0A])
+            do {
+                let fileURL = logFileURL(for: timestamp)
+                let data = try encoder.encode(entry)
+                let lineData = data + Data([0x0A])
 
-            if !fileManager.fileExists(atPath: fileURL.path) {
-                fileManager.createFile(atPath: fileURL.path, contents: nil)
-            }
+                if !fileManager.fileExists(atPath: fileURL.path) {
+                    fileManager.createFile(atPath: fileURL.path, contents: nil)
+                }
 
-            let handle = try FileHandle(forWritingTo: fileURL)
-            defer { handle.closeFile() }
-            handle.seekToEndOfFile()
-            handle.write(lineData)
+                let handle = try FileHandle(forWritingTo: fileURL)
+                defer { handle.closeFile() }
+                handle.seekToEndOfFile()
+                handle.write(lineData)
 
-            if _isConsoleOutputEnabled {
-                consoleWriter(consoleLine(for: entry))
+                if _isConsoleOutputEnabled {
+                    consoleWriter(consoleLine(for: entry))
+                }
+            } catch {
+                // Ignore write failures for fire-and-forget logging.
             }
         }
     }
@@ -166,8 +170,8 @@ public final class LogManager: @unchecked Sendable {
         source: some LogSourceRepresentable,
         metadata: [String: String] = [:],
         timestamp: Date = Date()
-    ) throws {
-        try log(message, level: .debug, source: source, metadata: metadata, timestamp: timestamp)
+    ) {
+        log(message, level: .debug, source: source, metadata: metadata, timestamp: timestamp)
     }
 
     public func infoLog(
@@ -175,8 +179,8 @@ public final class LogManager: @unchecked Sendable {
         source: some LogSourceRepresentable,
         metadata: [String: String] = [:],
         timestamp: Date = Date()
-    ) throws {
-        try log(message, level: .info, source: source, metadata: metadata, timestamp: timestamp)
+    ) {
+        log(message, level: .info, source: source, metadata: metadata, timestamp: timestamp)
     }
 
     public func warnLog(
@@ -184,8 +188,8 @@ public final class LogManager: @unchecked Sendable {
         source: some LogSourceRepresentable,
         metadata: [String: String] = [:],
         timestamp: Date = Date()
-    ) throws {
-        try log(message, level: .warning, source: source, metadata: metadata, timestamp: timestamp)
+    ) {
+        log(message, level: .warning, source: source, metadata: metadata, timestamp: timestamp)
     }
 
     public func errorLog(
@@ -193,8 +197,8 @@ public final class LogManager: @unchecked Sendable {
         source: some LogSourceRepresentable,
         metadata: [String: String] = [:],
         timestamp: Date = Date()
-    ) throws {
-        try log(message, level: .error, source: source, metadata: metadata, timestamp: timestamp)
+    ) {
+        log(message, level: .error, source: source, metadata: metadata, timestamp: timestamp)
     }
 
     public func criticalLog(
@@ -202,53 +206,8 @@ public final class LogManager: @unchecked Sendable {
         source: some LogSourceRepresentable,
         metadata: [String: String] = [:],
         timestamp: Date = Date()
-    ) throws {
-        try log(message, level: .critical, source: source, metadata: metadata, timestamp: timestamp)
-    }
-
-    public func dLog(
-        _ message: String,
-        source: some LogSourceRepresentable,
-        metadata: [String: String] = [:],
-        timestamp: Date = Date()
-    ) throws {
-        try debugLog(message, source: source, metadata: metadata, timestamp: timestamp)
-    }
-
-    public func iLog(
-        _ message: String,
-        source: some LogSourceRepresentable,
-        metadata: [String: String] = [:],
-        timestamp: Date = Date()
-    ) throws {
-        try infoLog(message, source: source, metadata: metadata, timestamp: timestamp)
-    }
-
-    public func wLog(
-        _ message: String,
-        source: some LogSourceRepresentable,
-        metadata: [String: String] = [:],
-        timestamp: Date = Date()
-    ) throws {
-        try warnLog(message, source: source, metadata: metadata, timestamp: timestamp)
-    }
-
-    public func eLog(
-        _ message: String,
-        source: some LogSourceRepresentable,
-        metadata: [String: String] = [:],
-        timestamp: Date = Date()
-    ) throws {
-        try errorLog(message, source: source, metadata: metadata, timestamp: timestamp)
-    }
-
-    public func cLog(
-        _ message: String,
-        source: some LogSourceRepresentable,
-        metadata: [String: String] = [:],
-        timestamp: Date = Date()
-    ) throws {
-        try criticalLog(message, source: source, metadata: metadata, timestamp: timestamp)
+    ) {
+        log(message, level: .critical, source: source, metadata: metadata, timestamp: timestamp)
     }
 
     public func readEntries(for date: Date) throws -> [LogEntry] {
