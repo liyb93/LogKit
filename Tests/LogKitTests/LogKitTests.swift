@@ -6,6 +6,14 @@ final class LogKitTests: XCTestCase {
         var lines: [String] = []
     }
 
+    private struct FeatureSource: LogSourceRepresentable {
+        let feature: String
+
+        var logSource: String {
+            "Feature.\(feature)"
+        }
+    }
+
     private func makeLogManager() throws -> (LogManager, URL) {
         let baseURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -131,5 +139,41 @@ final class LogKitTests: XCTestCase {
         XCTAssertTrue(recorder.lines[0].contains("[WARNING]"))
         XCTAssertTrue(recorder.lines[0].contains("[UnitTest]"))
         XCTAssertTrue(recorder.lines[0].contains("k=v"))
+    }
+
+    func testConfigMethodSetsPropertiesInOneCall() throws {
+        let (manager, _) = try makeLogManager()
+
+        manager.config(minimumLevel: .error, isConsoleOutputEnabled: true)
+
+        XCTAssertEqual(manager.minimumLevel, .error)
+        XCTAssertTrue(manager.isConsoleOutputEnabled)
+    }
+
+    func testDefaultLevelIsInfoWhenNotSpecified() throws {
+        let (manager, _) = try makeLogManager()
+        let date = makeDate(year: 2026, month: 2, day: 17)
+
+        try manager.log("default-info", source: "UnitTest", timestamp: date)
+
+        let entries = try manager.readEntries(for: date)
+        XCTAssertEqual(entries.count, 1)
+        XCTAssertEqual(entries.first?.level, .info)
+    }
+
+    func testCustomSourceTypeAndShortcutMethods() throws {
+        let (manager, _) = try makeLogManager()
+        let date = makeDate(year: 2026, month: 2, day: 18)
+        let source = FeatureSource(feature: "Login")
+
+        try manager.d("debug", source: source, timestamp: date)
+        try manager.i("info", source: source, timestamp: date)
+        try manager.w("warn", source: source, timestamp: date)
+        try manager.e("error", source: source, timestamp: date)
+        try manager.c("critical", source: source, timestamp: date)
+
+        let entries = try manager.readEntries(for: date)
+        XCTAssertEqual(entries.map(\.level), [.debug, .info, .warning, .error, .critical])
+        XCTAssertTrue(entries.allSatisfy { $0.source == "Feature.Login" })
     }
 }
